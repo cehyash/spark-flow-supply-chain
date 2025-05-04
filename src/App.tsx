@@ -12,6 +12,7 @@ import Register from "./pages/auth/Register";
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
 import AdminSuppliers from "./pages/admin/Suppliers";
 
 // Customer pages
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/admin" element={<MainLayout userRole="admin" />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
             <Route path="suppliers" element={<AdminSuppliers />} />
           </Route>
           
