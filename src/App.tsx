@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminOrders from "./pages/admin/Orders";
 import AdminSuppliers from "./pages/admin/Suppliers";
+import AdminCustomers from "./pages/admin/Customers";
 
 // Customer pages
 import CustomerDashboard from "./pages/customer/Dashboard";
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="suppliers" element={<AdminSuppliers />} />
+            <Route path="customers" element={<AdminCustomers />} />
           </Route>
           
           {/* Customer routes */}
