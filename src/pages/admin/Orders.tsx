@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -23,9 +24,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Edit, MoreHorizontal, Package, Search, Trash, Eye } from "lucide-react";
+import { Edit, MoreHorizontal, Package, Search, Trash, Eye, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import OrderSupplierAssignment from "@/components/admin/orders/order-supplier-assignment";
+
+// Mock data for suppliers - normally would come from API
+const mockSuppliers = [
+  { id: "SUP-001", name: "ElectroPro Supplies" },
+  { id: "SUP-002", name: "Voltage Masters Inc." },
+  { id: "SUP-003", name: "Circuit Solutions" },
+  { id: "SUP-004", name: "Illumina Lighting Co." },
+  { id: "SUP-005", name: "SafetyFirst Equipment" },
+];
 
 // Mock data for orders
 const mockOrders = [
@@ -35,6 +46,7 @@ const mockOrders = [
     date: "2025-05-01",
     total: 249.99,
     status: "completed",
+    supplierId: "SUP-001", // Added supplier assignment
     items: [
       { id: "1", name: "Premium Copper Wire", quantity: 2, price: 24.99 },
       { id: "2", name: "LED Panel Light", quantity: 3, price: 34.50 },
@@ -47,6 +59,7 @@ const mockOrders = [
     date: "2025-05-02",
     total: 412.94,
     status: "processing",
+    supplierId: null, // No supplier assigned yet
     items: [
       { id: "3", name: "Circuit Breaker", quantity: 5, price: 12.99 },
       { id: "4", name: "Safety Helmet", quantity: 2, price: 19.95 },
@@ -60,6 +73,7 @@ const mockOrders = [
     date: "2025-05-02",
     total: 104.85,
     status: "shipped",
+    supplierId: "SUP-003", // Added supplier assignment
     items: [
       { id: "1", name: "Premium Copper Wire", quantity: 3, price: 24.99 },
       { id: "4", name: "Safety Helmet", quantity: 1, price: 19.95 },
@@ -71,6 +85,7 @@ const mockOrders = [
     date: "2025-05-03",
     total: 138.00,
     status: "pending",
+    supplierId: null, // No supplier assigned yet
     items: [
       { id: "2", name: "LED Panel Light", quantity: 4, price: 34.50 },
     ]
@@ -81,6 +96,7 @@ const mockOrders = [
     date: "2025-05-03",
     total: 349.75,
     status: "cancelled",
+    supplierId: "SUP-002", // Added supplier assignment
     items: [
       { id: "1", name: "Premium Copper Wire", quantity: 5, price: 24.99 },
       { id: "3", name: "Circuit Breaker", quantity: 8, price: 12.99 },
@@ -94,6 +110,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState(mockOrders);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
 
   const handleViewOrder = (order: typeof mockOrders[0]) => {
@@ -113,6 +130,30 @@ export default function AdminOrders() {
     setIsDialogOpen(false);
   };
 
+  const handleAssignSupplier = (order: typeof mockOrders[0]) => {
+    setSelectedOrder(order);
+    setIsSupplierDialogOpen(true);
+  };
+
+  const handleSupplierAssigned = (orderId: string, supplierId: string | null) => {
+    // Update the order with the selected supplier
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, supplierId } : order
+    ));
+    
+    // Show success toast
+    const supplierName = supplierId 
+      ? mockSuppliers.find(s => s.id === supplierId)?.name 
+      : "No supplier";
+    
+    toast({
+      title: "Supplier assigned",
+      description: `${supplierName} has been assigned to order ${orderId}.`,
+    });
+    
+    setIsSupplierDialogOpen(false);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -128,6 +169,12 @@ export default function AdminOrders() {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getSupplierName = (supplierId: string | null) => {
+    if (!supplierId) return "Not assigned";
+    const supplier = mockSuppliers.find(s => s.id === supplierId);
+    return supplier ? supplier.name : "Unknown supplier";
   };
 
   const filteredOrders = orders.filter(order =>
@@ -161,6 +208,7 @@ export default function AdminOrders() {
               <TableHead>Customer</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Supplier</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
@@ -177,6 +225,7 @@ export default function AdminOrders() {
                       {order.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>{getSupplierName(order.supplierId)}</TableCell>
                   <TableCell className="text-right font-medium">${order.total.toFixed(2)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -189,6 +238,10 @@ export default function AdminOrders() {
                         <DropdownMenuItem onClick={() => handleViewOrder(order)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAssignSupplier(order)}>
+                          <UserCheck className="mr-2 h-4 w-4" />
+                          Assign Supplier
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleUpdateStatus(order.id, "processing")}>
                           <Edit className="mr-2 h-4 w-4" />
@@ -216,7 +269,7 @@ export default function AdminOrders() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-6">
+                <TableCell colSpan={7} className="text-center py-6">
                   No orders found matching your search.
                 </TableCell>
               </TableRow>
@@ -225,6 +278,7 @@ export default function AdminOrders() {
         </Table>
       </div>
 
+      {/* Order Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -250,6 +304,10 @@ export default function AdminOrders() {
                   <Badge className={`capitalize ${getStatusColor(selectedOrder.status)}`}>
                     {selectedOrder.status}
                   </Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Supplier</p>
+                  <p>{getSupplierName(selectedOrder.supplierId)}</p>
                 </div>
               </div>
               
@@ -303,6 +361,27 @@ export default function AdminOrders() {
                 </Button>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Supplier Assignment Dialog */}
+      <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Assign Supplier</DialogTitle>
+            <DialogDescription>
+              Select a supplier to fulfill this order.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedOrder && (
+            <OrderSupplierAssignment
+              orderId={selectedOrder.id}
+              currentSupplierId={selectedOrder.supplierId}
+              suppliers={mockSuppliers}
+              onAssign={handleSupplierAssigned}
+              onCancel={() => setIsSupplierDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>
