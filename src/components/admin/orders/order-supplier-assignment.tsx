@@ -47,14 +47,14 @@ export default function OrderSupplierAssignment({
         <div className="space-y-2">
           <Label htmlFor="supplier">Select Supplier</Label>
           <Select
-            value={selectedSupplierId || ""}
-            onValueChange={(value) => setSelectedSupplierId(value || null)}
+            value={selectedSupplierId || "none"}
+            onValueChange={(value) => setSelectedSupplierId(value === "none" ? null : value)}
           >
             <SelectTrigger id="supplier">
               <SelectValue placeholder="Select a supplier" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {suppliers.map((supplier) => (
                 <SelectItem key={supplier.id} value={supplier.id}>
                   {supplier.name}
