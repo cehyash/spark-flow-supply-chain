@@ -64,7 +64,7 @@ export default function MainSidebar({ userRole, isOpen }: MainSidebarProps) {
             <SidebarMenuItem key={item.path}>
               <SidebarMenuButton
                 asChild
-                selected={location.pathname === item.path}
+                isActive={location.pathname === item.path}
                 className="flex items-center py-3"
                 onClick={() => navigate(item.path)}
               >
