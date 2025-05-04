@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import SupplierForm from "@/components/admin/suppliers/supplier-form";
 import { Badge } from "@/components/ui/badge";
 import { Edit, MoreHorizontal, Plus, Search, Trash } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for suppliers
 const mockSuppliers = [

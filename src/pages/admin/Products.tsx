@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import ProductForm from "@/components/admin/products/product-form";
 import { Badge } from "@/components/ui/badge";
 import { Edit, MoreHorizontal, Package, Plus, Search, Trash } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for products
 const mockProducts = [

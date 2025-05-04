@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Menu, Bell, ShoppingCart, LogOut, User, Settings } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface MainHeaderProps {
   sidebarOpen: boolean;
