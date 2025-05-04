@@ -27,6 +27,17 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, MoreHorizontal, Plus, Search, Trash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Type for supplier
+interface Supplier {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  categories: string[];
+  notes: string;
+}
+
 // Mock data for suppliers
 const mockSuppliers = [
   {
@@ -60,17 +71,17 @@ const mockSuppliers = [
 
 export default function AdminSuppliers() {
   const { toast } = useToast();
-  const [suppliers, setSuppliers] = useState(mockSuppliers);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<typeof mockSuppliers[0] | null>(null);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
 
   const handleCreateSupplier = () => {
     setEditingSupplier(null);
     setIsDialogOpen(true);
   };
 
-  const handleEditSupplier = (supplier: typeof mockSuppliers[0]) => {
+  const handleEditSupplier = (supplier: Supplier) => {
     setEditingSupplier(supplier);
     setIsDialogOpen(true);
   };
@@ -84,8 +95,19 @@ export default function AdminSuppliers() {
     });
   };
 
-  const handleFormSubmit = () => {
-    // In a real app, this would update the data from the API
+  const handleFormSubmit = (supplierData: Supplier) => {
+    if (editingSupplier) {
+      // Update existing supplier
+      setSuppliers(currentSuppliers => 
+        currentSuppliers.map(s => 
+          s.id === supplierData.id ? supplierData : s
+        )
+      );
+    } else {
+      // Add new supplier
+      setSuppliers(currentSuppliers => [...currentSuppliers, supplierData]);
+    }
+    
     setIsDialogOpen(false);
   };
 

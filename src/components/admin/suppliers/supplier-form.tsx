@@ -17,7 +17,15 @@ interface SupplierFormProps {
     categories: string[];
     notes: string;
   };
-  onSubmit: () => void;
+  onSubmit: (supplierData: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    categories: string[];
+    notes: string;
+  }) => void;
   onCancel: () => void;
 }
 
@@ -55,12 +63,23 @@ export default function SupplierForm({ supplier, onSubmit, onCancel }: SupplierF
       // Mock API call - in a real app, this would be a call to your backend
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Create the supplier data object
+      const supplierData = {
+        id: supplier?.id || `supplier-${Date.now()}`, // Generate a unique ID for new suppliers
+        name,
+        email,
+        phone,
+        address,
+        categories,
+        notes
+      };
+      
       toast({
         title: `Supplier ${supplier ? "updated" : "created"} successfully`,
         description: `${name} has been ${supplier ? "updated in" : "added to"} your suppliers list.`,
       });
       
-      onSubmit();
+      onSubmit(supplierData);
     } catch (error) {
       toast({
         title: `Failed to ${supplier ? "update" : "create"} supplier`,
