@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -28,6 +28,7 @@ import { Edit, MoreHorizontal, Package, Search, Trash, Eye, UserCheck } from "lu
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import OrderSupplierAssignment from "@/components/admin/orders/order-supplier-assignment";
+import { useSearchParams } from "react-router-dom";
 
 // Mock data for suppliers - normally would come from API
 const mockSuppliers = [
@@ -38,15 +39,15 @@ const mockSuppliers = [
   { id: "SUP-005", name: "SafetyFirst Equipment" },
 ];
 
-// Mock data for orders
-const mockOrders = [
+// Default mock orders in case localStorage is empty
+const defaultMockOrders = [
   {
     id: "ORD-1234",
     customerName: "John Smith",
     date: "2025-05-01",
     total: 249.99,
     status: "completed",
-    supplierId: "SUP-001", // Added supplier assignment
+    supplierId: "SUP-001",
     items: [
       { id: "1", name: "Premium Copper Wire", quantity: 2, price: 24.99 },
       { id: "2", name: "LED Panel Light", quantity: 3, price: 34.50 },
@@ -59,70 +60,73 @@ const mockOrders = [
     date: "2025-05-02",
     total: 412.94,
     status: "processing",
-    supplierId: null, // No supplier assigned yet
+    supplierId: null,
     items: [
       { id: "3", name: "Circuit Breaker", quantity: 5, price: 12.99 },
       { id: "4", name: "Safety Helmet", quantity: 2, price: 19.95 },
       { id: "5", name: "Insulated Screwdriver Set", quantity: 3, price: 45.00 },
       { id: "2", name: "LED Panel Light", quantity: 4, price: 34.50 },
     ]
-  },
-  {
-    id: "ORD-1236",
-    customerName: "Michael Brown",
-    date: "2025-05-02",
-    total: 104.85,
-    status: "shipped",
-    supplierId: "SUP-003", // Added supplier assignment
-    items: [
-      { id: "1", name: "Premium Copper Wire", quantity: 3, price: 24.99 },
-      { id: "4", name: "Safety Helmet", quantity: 1, price: 19.95 },
-    ]
-  },
-  {
-    id: "ORD-1237",
-    customerName: "Emma Wilson",
-    date: "2025-05-03",
-    total: 138.00,
-    status: "pending",
-    supplierId: null, // No supplier assigned yet
-    items: [
-      { id: "2", name: "LED Panel Light", quantity: 4, price: 34.50 },
-    ]
-  },
-  {
-    id: "ORD-1238",
-    customerName: "David Clark",
-    date: "2025-05-03",
-    total: 349.75,
-    status: "cancelled",
-    supplierId: "SUP-002", // Added supplier assignment
-    items: [
-      { id: "1", name: "Premium Copper Wire", quantity: 5, price: 24.99 },
-      { id: "3", name: "Circuit Breaker", quantity: 8, price: 12.99 },
-      { id: "5", name: "Insulated Screwdriver Set", quantity: 2, price: 45.00 },
-    ]
-  },
+  }
 ];
 
 export default function AdminOrders() {
   const { toast } = useToast();
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<typeof mockOrders[0] | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [searchParams] = useSearchParams();
 
-  const handleViewOrder = (order: typeof mockOrders[0]) => {
+  // Load orders from localStorage or use mock data
+  useEffect(() => {
+    const storedOrders = localStorage.getItem("orders");
+    if (storedOrders) {
+      // Combine stored orders with mock orders
+      const parsedOrders = JSON.parse(storedOrders);
+      setOrders([...parsedOrders, ...defaultMockOrders]);
+    } else {
+      setOrders(defaultMockOrders);
+    }
+    
+    // Check for order ID in URL query params
+    const idParam = searchParams.get("id");
+    if (idParam) {
+      const allOrders = storedOrders 
+        ? [...JSON.parse(storedOrders), ...defaultMockOrders] 
+        : defaultMockOrders;
+      
+      const orderToView = allOrders.find(order => order.id === idParam);
+      if (orderToView) {
+        setSelectedOrder(orderToView);
+        setIsDialogOpen(true);
+      }
+    }
+  }, [searchParams]);
+
+  const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setIsDialogOpen(true);
   };
 
-  const handleUpdateStatus = (id: string, newStatus: string) => {
-    // In a real app, this would be an API call
-    setOrders(orders.map(order => 
+  const handleUpdateStatus = (id, newStatus) => {
+    // Update in state
+    const updatedOrders = orders.map(order => 
       order.id === id ? { ...order, status: newStatus } : order
-    ));
+    );
+    setOrders(updatedOrders);
+    
+    // Update in localStorage if it exists there
+    const storedOrders = localStorage.getItem("orders");
+    if (storedOrders) {
+      const parsedOrders = JSON.parse(storedOrders);
+      const updatedStoredOrders = parsedOrders.map(order => 
+        order.id === id ? { ...order, status: newStatus } : order
+      );
+      localStorage.setItem("orders", JSON.stringify(updatedStoredOrders));
+    }
+    
     toast({
       title: "Order updated",
       description: `Order ${id} status changed to ${newStatus}.`,
@@ -130,16 +134,27 @@ export default function AdminOrders() {
     setIsDialogOpen(false);
   };
 
-  const handleAssignSupplier = (order: typeof mockOrders[0]) => {
+  const handleAssignSupplier = (order) => {
     setSelectedOrder(order);
     setIsSupplierDialogOpen(true);
   };
 
-  const handleSupplierAssigned = (orderId: string, supplierId: string | null) => {
-    // Update the order with the selected supplier
-    setOrders(orders.map(order => 
+  const handleSupplierAssigned = (orderId, supplierId) => {
+    // Update in state
+    const updatedOrders = orders.map(order => 
       order.id === orderId ? { ...order, supplierId } : order
-    ));
+    );
+    setOrders(updatedOrders);
+    
+    // Update in localStorage if it exists there
+    const storedOrders = localStorage.getItem("orders");
+    if (storedOrders) {
+      const parsedOrders = JSON.parse(storedOrders);
+      const updatedStoredOrders = parsedOrders.map(order => 
+        order.id === orderId ? { ...order, supplierId } : order
+      );
+      localStorage.setItem("orders", JSON.stringify(updatedStoredOrders));
+    }
     
     // Show success toast
     const supplierName = supplierId 
@@ -154,7 +169,7 @@ export default function AdminOrders() {
     setIsSupplierDialogOpen(false);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case "completed":
         return "bg-green-100 text-green-800";
@@ -171,15 +186,15 @@ export default function AdminOrders() {
     }
   };
 
-  const getSupplierName = (supplierId: string | null) => {
+  const getSupplierName = (supplierId) => {
     if (!supplierId) return "Not assigned";
     const supplier = mockSuppliers.find(s => s.id === supplierId);
     return supplier ? supplier.name : "Unknown supplier";
   };
 
   const filteredOrders = orders.filter(order =>
-    order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.customerName.toLowerCase().includes(searchQuery.toLowerCase())
+    order.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -226,7 +241,9 @@ export default function AdminOrders() {
                     </Badge>
                   </TableCell>
                   <TableCell>{getSupplierName(order.supplierId)}</TableCell>
-                  <TableCell className="text-right font-medium">${order.total.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-medium">
+                    ${typeof order.total === 'number' ? order.total.toFixed(2) : order.total}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -338,7 +355,9 @@ export default function AdminOrders() {
                       ))}
                       <TableRow>
                         <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
-                        <TableCell className="text-right font-bold">${selectedOrder.total.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold">
+                          ${typeof selectedOrder.total === 'number' ? selectedOrder.total.toFixed(2) : selectedOrder.total}
+                        </TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>

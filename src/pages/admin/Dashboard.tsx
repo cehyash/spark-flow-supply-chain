@@ -1,11 +1,13 @@
 
+import { useEffect, useState } from "react";
 import { ShoppingBag, Package, Users, CreditCard, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StatsCard from "@/components/admin/dashboard/stats-card";
 import RecentOrders from "@/components/admin/dashboard/recent-orders";
 import { useNavigate } from "react-router-dom";
 
-const mockOrders = [
+// Default mock orders if localStorage is empty
+const defaultMockOrders = [
   { 
     id: "ORD001", 
     customer: "John Smith", 
@@ -19,25 +21,38 @@ const mockOrders = [
     date: "2025-05-03", 
     amount: "$89.99", 
     status: "processing" as const 
-  },
-  { 
-    id: "ORD003", 
-    customer: "Michael Brown", 
-    date: "2025-05-03", 
-    amount: "$243.50", 
-    status: "pending" as const 
-  },
-  { 
-    id: "ORD004", 
-    customer: "Emily Davis", 
-    date: "2025-05-04", 
-    amount: "$65.75", 
-    status: "dispatched" as const 
-  },
+  }
 ];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [recentOrders, setRecentOrders] = useState([]);
+
+  useEffect(() => {
+    // Load orders from localStorage
+    const storedOrders = localStorage.getItem("orders");
+    if (storedOrders) {
+      const parsedOrders = JSON.parse(storedOrders);
+      
+      // Convert to format expected by RecentOrders component
+      const formattedOrders = parsedOrders.map(order => ({
+        id: order.id,
+        customer: order.customerName,
+        date: new Date(order.date).toLocaleDateString(),
+        amount: `$${typeof order.total === 'number' ? order.total.toFixed(2) : order.total}`,
+        status: order.status === "pending" ? "pending" :
+               order.status === "processing" ? "processing" :
+               order.status === "shipped" ? "dispatched" : 
+               order.status === "completed" ? "delivered" : "pending"
+      }));
+      
+      // Combine with default orders if needed, but prioritize recent real orders
+      const combinedOrders = [...formattedOrders, ...defaultMockOrders].slice(0, 4);
+      setRecentOrders(combinedOrders);
+    } else {
+      setRecentOrders(defaultMockOrders);
+    }
+  }, []);
 
   const handleViewOrder = (orderId: string) => {
     navigate(`/admin/orders?id=${orderId}`);
@@ -68,9 +83,9 @@ export default function AdminDashboard() {
         />
         <StatsCard 
           title="Orders"
-          value="35"
+          value={`${recentOrders.length || 0}`}
           icon={<ShoppingBag className="h-5 w-5 text-muted-foreground" />}
-          description="12 new today"
+          description="New today"
         />
         <StatsCard 
           title="Active Customers"
@@ -81,7 +96,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <RecentOrders orders={mockOrders} onViewOrder={handleViewOrder} />
+        <RecentOrders orders={recentOrders} onViewOrder={handleViewOrder} />
 
         <div className="grid gap-4">
           <h2 className="text-xl font-semibold">Pending Tasks</h2>
