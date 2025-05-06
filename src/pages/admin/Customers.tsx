@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -39,6 +39,13 @@ interface Customer {
   tags: string[];
   orders: number;
   totalSpent: number;
+}
+
+// Type for registered customer from localStorage
+interface RegisteredCustomer {
+  id?: string;
+  name: string;
+  email: string;
 }
 
 // Mock data for customers
@@ -83,10 +90,65 @@ const mockCustomers: Customer[] = [
 
 export default function AdminCustomers() {
   const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
+  // Load customers from both mock data and localStorage
+  useEffect(() => {
+    // Get registered customers from localStorage
+    const storedCustomers = localStorage.getItem("customers");
+    let registeredCustomers: RegisteredCustomer[] = [];
+    
+    if (storedCustomers) {
+      try {
+        registeredCustomers = JSON.parse(storedCustomers);
+      } catch (error) {
+        console.error("Error parsing customers from localStorage:", error);
+      }
+    }
+
+    // Get orders to check if customers have placed any
+    const storedOrders = localStorage.getItem("orders");
+    let orders: any[] = [];
+    if (storedOrders) {
+      try {
+        orders = JSON.parse(storedOrders);
+      } catch (error) {
+        console.error("Error parsing orders from localStorage:", error);
+      }
+    }
+
+    // Convert registered customers to the format needed for the table
+    const formattedRegisteredCustomers: Customer[] = registeredCustomers.map(customer => {
+      // Get customer name parts
+      const nameParts = customer.name?.split(" ") || ["", ""];
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+      
+      // Get customer orders
+      const customerOrders = orders.filter(order => order.customerEmail === customer.email);
+      const orderCount = customerOrders.length;
+      const totalSpent = customerOrders.reduce((total, order) => total + parseFloat(order.total || 0), 0);
+      
+      return {
+        id: customer.id || `customer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        firstName,
+        lastName,
+        email: customer.email || "",
+        phone: "",  // Default empty phone
+        address: "", // Default empty address
+        registrationDate: new Date().toISOString().split("T")[0], // Today's date
+        tags: ["new"], // Default tag for new customers
+        orders: orderCount,
+        totalSpent: totalSpent,
+      };
+    });
+
+    // Combine mock customers with registered customers
+    setCustomers([...formattedRegisteredCustomers, ...mockCustomers]);
+  }, []);
 
   const handleCreateCustomer = () => {
     setEditingCustomer(null);
@@ -99,8 +161,23 @@ export default function AdminCustomers() {
   };
 
   const handleDeleteCustomer = (id: string) => {
-    // In a real app, this would be an API call
+    // Check if it's a registered customer from localStorage
+    const storedCustomers = localStorage.getItem("customers");
+    
+    if (storedCustomers) {
+      const parsedCustomers = JSON.parse(storedCustomers);
+      const isRegisteredCustomer = parsedCustomers.some((c: RegisteredCustomer) => c.id === id);
+      
+      if (isRegisteredCustomer) {
+        // Remove from localStorage
+        const updatedCustomers = parsedCustomers.filter((c: RegisteredCustomer) => c.id !== id);
+        localStorage.setItem("customers", JSON.stringify(updatedCustomers));
+      }
+    }
+    
+    // Remove from state
     setCustomers(customers.filter(c => c.id !== id));
+    
     toast({
       title: "Customer deleted",
       description: "The customer has been removed from your list.",

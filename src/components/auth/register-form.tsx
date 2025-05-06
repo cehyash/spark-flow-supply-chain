@@ -31,7 +31,28 @@ export default function RegisterForm() {
     setIsLoading(true);
     
     try {
-      // Mock registration - in a real app, this would be an API call
+      // Save customer to localStorage
+      const customerId = `customer-${Date.now()}`;
+      const newCustomer = { 
+        id: customerId, 
+        name, 
+        email, 
+        createdAt: new Date().toISOString() 
+      };
+      
+      // Get existing customers or initialize empty array
+      const existingCustomers = JSON.parse(localStorage.getItem("customers") || "[]");
+      existingCustomers.push(newCustomer);
+      
+      // Save back to localStorage
+      localStorage.setItem("customers", JSON.stringify(existingCustomers));
+      
+      // Also save user credentials for login
+      const credentials = { email, password, role: "customer", name };
+      const existingCredentials = JSON.parse(localStorage.getItem("credentials") || "[]");
+      existingCredentials.push(credentials);
+      localStorage.setItem("credentials", JSON.stringify(existingCredentials));
+      
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
