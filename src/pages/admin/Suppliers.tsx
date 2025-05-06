@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -38,6 +38,17 @@ interface Supplier {
   notes: string;
 }
 
+// Type for registered supplier from localStorage
+interface RegisteredSupplier {
+  id: string;
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  address: string;
+  dateJoined: string;
+}
+
 // Mock data for suppliers
 const mockSuppliers = [
   {
@@ -71,10 +82,39 @@ const mockSuppliers = [
 
 export default function AdminSuppliers() {
   const { toast } = useToast();
-  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+
+  // Load suppliers from both mock data and localStorage
+  useEffect(() => {
+    // Get registered suppliers from localStorage
+    const storedSuppliers = localStorage.getItem("suppliers");
+    let registeredSuppliers: RegisteredSupplier[] = [];
+    
+    if (storedSuppliers) {
+      try {
+        registeredSuppliers = JSON.parse(storedSuppliers);
+      } catch (error) {
+        console.error("Error parsing suppliers from localStorage:", error);
+      }
+    }
+
+    // Convert registered suppliers to the format needed for the table
+    const formattedRegisteredSuppliers: Supplier[] = registeredSuppliers.map(supplier => ({
+      id: supplier.id,
+      name: supplier.companyName,
+      email: supplier.email,
+      phone: supplier.phone,
+      address: supplier.address,
+      categories: [], // Default empty categories for registered suppliers
+      notes: `Contact person: ${supplier.contactName}. Registered on: ${new Date(supplier.dateJoined).toLocaleDateString()}`
+    }));
+
+    // Combine mock suppliers with registered suppliers
+    setSuppliers([...formattedRegisteredSuppliers, ...mockSuppliers]);
+  }, []);
 
   const handleCreateSupplier = () => {
     setEditingSupplier(null);
@@ -87,8 +127,23 @@ export default function AdminSuppliers() {
   };
 
   const handleDeleteSupplier = (id: string) => {
-    // In a real app, this would be an API call
+    // Check if it's a registered supplier from localStorage
+    const storedSuppliers = localStorage.getItem("suppliers");
+    
+    if (storedSuppliers) {
+      const parsedSuppliers = JSON.parse(storedSuppliers);
+      const isRegisteredSupplier = parsedSuppliers.some((s: RegisteredSupplier) => s.id === id);
+      
+      if (isRegisteredSupplier) {
+        // Remove from localStorage
+        const updatedSuppliers = parsedSuppliers.filter((s: RegisteredSupplier) => s.id !== id);
+        localStorage.setItem("suppliers", JSON.stringify(updatedSuppliers));
+      }
+    }
+    
+    // Remove from state
     setSuppliers(suppliers.filter(s => s.id !== id));
+    
     toast({
       title: "Supplier deleted",
       description: "The supplier has been removed from your list.",
@@ -166,11 +221,15 @@ export default function AdminSuppliers() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {supplier.categories.map(category => (
-                        <Badge key={category} variant="outline" className="capitalize">
-                          {category}
-                        </Badge>
-                      ))}
+                      {supplier.categories.length > 0 ? (
+                        supplier.categories.map(category => (
+                          <Badge key={category} variant="outline" className="capitalize">
+                            {category}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No categories</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="max-w-xs">
