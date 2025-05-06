@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,23 @@ export default function LoginForm({ onRoleSelect, defaultRole = "customer" }: Lo
           description: "Welcome back to Master Electricals",
         });
         navigate("/customer/dashboard");
+      } else if (role === "supplier") {
+        // Get suppliers from localStorage
+        const suppliers = JSON.parse(localStorage.getItem("suppliers") || "[]");
+        const supplier = suppliers.find((s: any) => s.email === email);
+        
+        if (supplier) {
+          // Save current supplier in localStorage
+          localStorage.setItem("currentSupplier", JSON.stringify(supplier));
+          
+          toast({
+            title: "Supplier login successful",
+            description: "Welcome to the supplier portal",
+          });
+          navigate("/supplier/dashboard");
+        } else {
+          throw new Error("Invalid supplier credentials");
+        }
       } else {
         throw new Error("Invalid credentials");
       }
@@ -67,7 +84,7 @@ export default function LoginForm({ onRoleSelect, defaultRole = "customer" }: Lo
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-6">
             <Button
               type="button"
               variant={role === "customer" ? "default" : "outline"}
@@ -90,6 +107,17 @@ export default function LoginForm({ onRoleSelect, defaultRole = "customer" }: Lo
             >
               Admin
             </Button>
+            <Button
+              type="button"
+              variant={role === "supplier" ? "default" : "outline"}
+              onClick={() => {
+                setRole("supplier");
+                if (onRoleSelect) onRoleSelect("supplier");
+              }}
+              className="w-full"
+            >
+              Supplier
+            </Button>
           </div>
 
           <div className="space-y-2">
@@ -107,9 +135,9 @@ export default function LoginForm({ onRoleSelect, defaultRole = "customer" }: Lo
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <a href="#" className="text-sm text-primary hover:underline">
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <Input
               id="password"
@@ -125,13 +153,21 @@ export default function LoginForm({ onRoleSelect, defaultRole = "customer" }: Lo
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
+      <CardFooter className="flex flex-col space-y-2">
+        <p className="text-sm text-muted-foreground w-full text-center">
           Don't have an account?{" "}
-          <a href="/register" className="text-primary hover:underline">
+          <Link to="/register" className="text-primary hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
+        {role === "supplier" && (
+          <p className="text-sm text-muted-foreground w-full text-center">
+            Supplier?{" "}
+            <Link to="/supplier/register" className="text-primary hover:underline">
+              Register as a supplier
+            </Link>
+          </p>
+        )}
       </CardFooter>
     </Card>
   );

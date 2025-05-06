@@ -9,9 +9,16 @@ export default function Login() {
         <p className="text-muted-foreground">Premium electrical and construction materials</p>
       </div>
       <LoginForm />
-      <p className="mt-8 text-sm text-muted-foreground">
-        Demo credentials - Admin: admin@example.com / password | Customer: customer@example.com / password
-      </p>
+      <div className="mt-8 text-sm text-muted-foreground max-w-md">
+        <p className="mb-2">
+          <strong>Demo credentials:</strong>
+        </p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>Admin: admin@example.com / password</li>
+          <li>Customer: customer@example.com / password</li>
+          <li>Supplier: Use credentials created during supplier registration</li>
+        </ul>
+      </div>
     </div>
   );
 }
