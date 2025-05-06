@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import CartItem from "@/components/customer/cart-item";
+import { ShoppingBag } from "lucide-react";
 
 // Mock data for cart items
 const initialCartItems = [
@@ -57,12 +58,9 @@ export default function CustomerCart() {
   };
 
   const handleCheckout = () => {
-    // In a real app, this would proceed to checkout flow
-    toast({
-      title: "Order placed successfully",
-      description: "Your order has been submitted and is being processed.",
-    });
-    navigate("/customer/orders");
+    // Save cart items to localStorage for use in checkout
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    navigate("/checkout");
   };
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -133,13 +131,21 @@ export default function CustomerCart() {
                 )}
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-4">
               <Button 
                 className="w-full" 
                 onClick={handleCheckout}
                 disabled={cartItems.length === 0}
               >
-                Checkout
+                <ShoppingBag className="mr-2 h-4 w-4" /> Checkout
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full" 
+                onClick={() => navigate("/checkout")}
+                disabled={cartItems.length === 0}
+              >
+                Guest Checkout
               </Button>
             </CardFooter>
           </Card>

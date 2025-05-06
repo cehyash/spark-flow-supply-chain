@@ -27,6 +27,34 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
   const handleAddToCart = () => {
     onAddToCart(product.id);
+    
+    // Store order in localStorage for admin dashboard to access
+    const cartItem = {
+      id: `cart-${Date.now()}`,
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      imageUrl: product.imageUrl,
+    };
+    
+    // Get existing cart or create new one
+    const existingCart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    
+    // Check if product already in cart, if so, increase quantity
+    const existingItemIndex = existingCart.findIndex(
+      (item: any) => item.productId === product.id
+    );
+    
+    if (existingItemIndex >= 0) {
+      existingCart[existingItemIndex].quantity += 1;
+    } else {
+      existingCart.push(cartItem);
+    }
+    
+    // Save updated cart
+    localStorage.setItem('cartItems', JSON.stringify(existingCart));
+    
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,

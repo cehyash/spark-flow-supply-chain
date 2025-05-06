@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import SupplierLogin from "./pages/auth/SupplierLogin";
+import SupplierRegister from "./pages/auth/SupplierRegister";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -21,6 +23,13 @@ import CustomerDashboard from "./pages/customer/Dashboard";
 import CustomerProducts from "./pages/customer/Products";
 import CustomerCart from "./pages/customer/Cart";
 import CustomerOrders from "./pages/customer/Orders";
+
+// Supplier pages
+import SupplierDashboard from "./pages/supplier/Dashboard";
+
+// Checkout pages
+import Checkout from "./pages/checkout/Checkout";
+import Confirmation from "./pages/checkout/Confirmation";
 
 // Layout
 import MainLayout from "./components/layout/main-layout";
@@ -38,6 +47,14 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
+          {/* Supplier auth routes */}
+          <Route path="/supplier/login" element={<SupplierLogin />} />
+          <Route path="/supplier/register" element={<SupplierRegister />} />
+          
+          {/* Checkout routes */}
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout/confirmation" element={<Confirmation />} />
+          
           {/* Admin routes */}
           <Route path="/admin" element={<MainLayout userRole="admin" />}>
             <Route path="dashboard" element={<AdminDashboard />} />
@@ -53,6 +70,11 @@ const App = () => (
             <Route path="products" element={<CustomerProducts />} />
             <Route path="cart" element={<CustomerCart />} />
             <Route path="orders" element={<CustomerOrders />} />
+          </Route>
+          
+          {/* Supplier routes */}
+          <Route path="/supplier" element={<MainLayout userRole="supplier" />}>
+            <Route path="dashboard" element={<SupplierDashboard />} />
           </Route>
           
           {/* Catch-all route */}

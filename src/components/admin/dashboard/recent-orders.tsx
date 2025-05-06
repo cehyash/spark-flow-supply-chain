@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
 interface Order {
   id: string;
@@ -26,9 +28,10 @@ interface Order {
 
 interface RecentOrdersProps {
   orders: Order[];
+  onViewOrder?: (orderId: string) => void;
 }
 
-export default function RecentOrders({ orders }: RecentOrdersProps) {
+export default function RecentOrders({ orders, onViewOrder }: RecentOrdersProps) {
   const getStatusColor = (status: Order["status"]) => {
     switch (status) {
       case "pending": return "bg-yellow-500";
@@ -54,6 +57,7 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
               <TableHead>Date</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Status</TableHead>
+              {onViewOrder && <TableHead className="text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -68,6 +72,13 @@ export default function RecentOrders({ orders }: RecentOrdersProps) {
                     {order.status}
                   </Badge>
                 </TableCell>
+                {onViewOrder && (
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => onViewOrder(order.id)}>
+                      <Eye className="h-4 w-4 mr-1" /> View
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

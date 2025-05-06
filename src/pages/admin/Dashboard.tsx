@@ -39,6 +39,10 @@ const mockOrders = [
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
+  const handleViewOrder = (orderId: string) => {
+    navigate(`/admin/orders?id=${orderId}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -77,7 +81,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <RecentOrders orders={mockOrders} />
+        <RecentOrders orders={mockOrders} onViewOrder={handleViewOrder} />
 
         <div className="grid gap-4">
           <h2 className="text-xl font-semibold">Pending Tasks</h2>
